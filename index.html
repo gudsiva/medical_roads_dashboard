@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>НСЗУ · Дороги - дашборд відкритих даних</title>
+<title>NHSU · Roads - Open Data Dashboard</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -183,101 +183,101 @@
 
 <header>
   <div>
-    <h1>Відкриті дані охорони здоров'я та доріг</h1>
-    <p>Джерело: НСЗУ / data.gov.ua · OpenStreetMap · межі областей geoBoundaries</p>
+    <h1>Healthcare and Roads Open Data</h1>
+    <p>Source: NHSU / data.gov.ua · OpenStreetMap · Region boundaries geoBoundaries</p>
   </div>
   <nav class="tabs">
-    <button class="active" data-view="medical">Медичні заклади</button>
-    <button data-view="roads">Стан доріг</button>
+    <button class="active" data-view="medical">Medical Facilities</button>
+    <button data-view="roads">Road Conditions</button>
   </nav>
 </header>
 
 <main>
 
-  <!-- ===================== МЕДИЧНІ ЗАКЛАДИ ===================== -->
+  <!-- ===================== MEDICAL FACILITIES ===================== -->
   <section id="medical" class="view active">
 
     <div class="filters">
       <div class="field">
-        <label>Тип медичної допомоги</label>
+        <label>Type of Medical Care</label>
         <div class="checks" id="careChips"></div>
       </div>
       <div class="field">
-        <label>Тип закладу</label>
+        <label>Facility Type</label>
         <div class="checks" id="divChips"></div>
       </div>
       <div class="field">
-        <label>Область</label>
-        <select id="regionSelect"><option value="">Усі області</option></select>
+        <label>Region</label>
+        <select id="regionSelect"><option value="">All Regions</option></select>
       </div>
       <div class="field">
-        <label>Сума фінансування, грн</label>
+        <label>Funding Amount, UAH</label>
         <div class="range-row">
-          <input type="number" id="payMin" placeholder="від">
-          <input type="number" id="payMax" placeholder="до">
+          <input type="number" id="payMin" placeholder="from">
+          <input type="number" id="payMax" placeholder="to">
         </div>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="num" id="kpiFacilities">–</div><div class="lbl">Точок надання послуг</div></div>
-      <div class="kpi"><div class="num" id="kpiEntities">–</div><div class="lbl">Унікальних юросіб</div></div>
-      <div class="kpi"><div class="num" id="kpiSum">–</div><div class="lbl">Сума фінансування</div></div>
-      <div class="kpi"><div class="num" id="kpiAvg">–</div><div class="lbl">Середнє на юрособу</div></div>
+      <div class="kpi"><div class="num" id="kpiFacilities">–</div><div class="lbl">Service Points</div></div>
+      <div class="kpi"><div class="num" id="kpiEntities">–</div><div class="lbl">Unique Legal Entities</div></div>
+      <div class="kpi"><div class="num" id="kpiSum">–</div><div class="lbl">Funding Amount</div></div>
+      <div class="kpi"><div class="num" id="kpiAvg">–</div><div class="lbl">Average per Entity</div></div>
     </div>
 
     <div class="grid-main">
       <div class="panel">
-        <h3>Карта закладів</h3>
+        <h3>Facility Map</h3>
         <div id="map"></div>
         <div class="legend">
-          <span><i class="dot" style="background:#1e88e5"></i>Первинна</span>
-          <span><i class="dot" style="background:#e53935"></i>Спеціалізована</span>
-          <span><i class="dot" style="background:#43a047"></i>Екстрена</span>
-          <span>· розмір точки = сума фінансування юрособи</span>
+          <span><i class="dot" style="background:#1e88e5"></i>Primary</span>
+          <span><i class="dot" style="background:#e53935"></i>Specialized</span>
+          <span><i class="dot" style="background:#43a047"></i>Emergency</span>
+          <span>· dot size = funding amount of the legal entity</span>
         </div>
       </div>
       <div class="panel">
-        <h3>Топ-10 областей за фінансуванням</h3>
+        <h3>Top 10 Regions by Funding</h3>
         <canvas id="regionChart" height="260"></canvas>
-        <h3 style="margin-top:20px">Топ-10 закладів</h3>
-        <table class="detail"><thead><tr><th>Заклад</th><th>Сума</th></tr></thead><tbody id="topTable"></tbody></table>
+        <h3 style="margin-top:20px">Top 10 Facilities</h3>
+        <table class="detail"><thead><tr><th>Facility</th><th>Amount</th></tr></thead><tbody id="topTable"></tbody></table>
       </div>
     </div>
   </section>
 
-  <!-- ===================== ДОРОГИ ===================== -->
+  <!-- ===================== ROADS ===================== -->
   <section id="roads" class="view">
     <div class="filters">
       <div class="field">
-        <label>Область</label>
+        <label>Region</label>
         <select id="oblastSelect"></select>
       </div>
       <div class="field">
-        <label>Клас дороги</label>
+        <label>Road Class</label>
         <div class="checks" id="fclassChips"></div>
       </div>
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="num" id="kpiSegments">–</div><div class="lbl">Сегментів дороги</div></div>
-      <div class="kpi"><div class="num" id="kpiSpeed">–</div><div class="lbl">Середня швидкість (оцінка+реальна)</div></div>
-      <div class="kpi"><div class="num" id="kpiEstimated">–</div><div class="lbl">Частка оцінених значень</div></div>
+      <div class="kpi"><div class="num" id="kpiSegments">–</div><div class="lbl">Road Segments</div></div>
+      <div class="kpi"><div class="num" id="kpiSpeed">–</div><div class="lbl">Average Speed (Estimated+Actual)</div></div>
+      <div class="kpi"><div class="num" id="kpiEstimated">–</div><div class="lbl">Share of Estimated Values</div></div>
     </div>
 
     <div class="grid-main">
       <div class="panel">
-        <h3>Дорожня мережа області</h3>
+        <h3>Regional Road Network</h3>
         <div id="roadsMap"></div>
         <div class="legend">
-          <span><i class="dot" style="background:#dc1414"></i>Магістралі/національні</span>
-          <span><i class="dot" style="background:#f08c00"></i>Регіональні</span>
-          <span><i class="dot" style="background:#f0c800"></i>Територіальні</span>
-          <span><i class="dot" style="background:#8c8c8c"></i>Місцеві/службові</span>
+          <span><i class="dot" style="background:#dc1414"></i>Motorways/National</span>
+          <span><i class="dot" style="background:#f08c00"></i>Regional</span>
+          <span><i class="dot" style="background:#f0c800"></i>Territorial</span>
+          <span><i class="dot" style="background:#8c8c8c"></i>Local/Service</span>
         </div>
       </div>
       <div class="panel">
-        <h3>Розподіл класів доріг</h3>
+        <h3>Road Class Distribution</h3>
         <canvas id="fclassChart" height="360"></canvas>
       </div>
     </div>
@@ -289,7 +289,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
 // ============================================================
-// Перемикання вкладок
+// Tab Switching
 // ============================================================
 document.querySelectorAll('nav.tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -302,7 +302,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
   });
 });
 
-const CARE_COLORS = {'Первинна':'#1e88e5','Спеціалізована':'#e53935','Екстрена':'#43a047'};
+const CARE_COLORS = {'Primary':'#1e88e5','Specialized':'#e53935','Emergency':'#43a047'};
 const FCLASS_COLORS = {
   motorway:'#dc1414', motorway_link:'#dc1414', trunk:'#dc1414', trunk_link:'#dc1414',
   primary:'#f08c00', primary_link:'#f08c00',
@@ -312,21 +312,21 @@ const FCLASS_COLORS = {
 };
 
 const OBLAST_UA = {
-  crimea:"АР Крим", cherkasy:"Черкаська область", chernihiv:"Чернігівська область",
-  chernivtsi:"Чернівецька область", dnipropetrovsk:"Дніпропетровська область",
-  donetsk:"Донецька область", ivano_frankivsk:"Івано-Франківська область",
-  kharkiv:"Харківська область", kherson:"Херсонська область",
-  khmelnytskyi:"Хмельницька область", kirovohrad:"Кіровоградська область",
-  kyiv_city:"м. Київ", kyiv_oblast:"Київська область", luhansk:"Луганська область",
-  lviv:"Львівська область", mykolaiv:"Миколаївська область", odesa:"Одеська область",
-  poltava:"Полтавська область", rivne:"Рівненська область", sevastopol:"м. Севастополь",
-  sumy:"Сумська область", ternopil:"Тернопільська область", vinnytsia:"Вінницька область",
-  volyn:"Волинська область", zakarpattia:"Закарпатська область",
-  zaporizhia:"Запорізька область", zhytomyr:"Житомирська область"
+  crimea:"AR Crimea", cherkasy:"Cherkasy Oblast", chernihiv:"Chernihiv Oblast",
+  chernivtsi:"Chernivtsi Oblast", dnipropetrovsk:"Dnipropetrovsk Oblast",
+  donetsk:"Donetsk Oblast", ivano_frankivsk:"Ivano-Frankivsk Oblast",
+  kharkiv:"Kharkiv Oblast", kherson:"Kherson Oblast",
+  khmelnytskyi:"Khmelnytskyi Oblast", kirovohrad:"Kirovohrad Oblast",
+  kyiv_city:"Kyiv City", kyiv_oblast:"Kyiv Oblast", luhansk:"Luhansk Oblast",
+  lviv:"Lviv Oblast", mykolaiv:"Mykolaiv Oblast", odesa:"Odesa Oblast",
+  poltava:"Poltava Oblast", rivne:"Rivne Oblast", sevastopol:"Sevastopol City",
+  sumy:"Sumy Oblast", ternopil:"Ternopil Oblast", vinnytsia:"Vinnytsia Oblast",
+  volyn:"Volyn Oblast", zakarpattia:"Zakarpattia Oblast",
+  zaporizhia:"Zaporizhzhia Oblast", zhytomyr:"Zhytomyr Oblast"
 };
 
 // ============================================================
-// МЕДИЧНІ ЗАКЛАДИ
+// MEDICAL FACILITIES
 // ============================================================
 let medData = [];
 let medMapObj, medMarkersLayer, regionChartObj;
@@ -340,7 +340,7 @@ fetch('data/medical.json')
     renderMedical();
   })
   .catch(()=>{
-    document.getElementById('map').innerHTML = '<p class="loading">Не вдалось завантажити data/medical.json — перевірте, що файл лежить поруч з index.html.</p>';
+    document.getElementById('map').innerHTML = '<p class="loading">Failed to load data/medical.json — check that the file is located next to index.html.</p>';
   });
 
 const careState = {};
@@ -406,18 +406,18 @@ function getFilteredMedical(){
 function renderMedical(){
   const filtered = getFilteredMedical();
 
-  // KPI (дедуплікація по ЄДРПОУ — критично, щоб не рахувати суму по кожному відділенню)
+  // KPI (deduplication by EDRPOU — critical to avoid counting the amount for each branch)
   const byEntity = {};
   filtered.forEach(d=>{ byEntity[d.legal_entity_edrpou] = d.total_pay_all; });
   const totalSum = Object.values(byEntity).reduce((a,b)=>a+b,0);
   const nEntities = Object.keys(byEntity).length;
 
-  document.getElementById('kpiFacilities').textContent = filtered.length.toLocaleString('uk-UA');
-  document.getElementById('kpiEntities').textContent = nEntities.toLocaleString('uk-UA');
-  document.getElementById('kpiSum').textContent = (totalSum/1e9).toFixed(2) + ' млрд грн';
-  document.getElementById('kpiAvg').textContent = nEntities ? (totalSum/nEntities/1e6).toFixed(1) + ' млн грн' : '–';
+  document.getElementById('kpiFacilities').textContent = filtered.length.toLocaleString('en-US');
+  document.getElementById('kpiEntities').textContent = nEntities.toLocaleString('en-US');
+  document.getElementById('kpiSum').textContent = (totalSum/1e9).toFixed(2) + ' bln UAH';
+  document.getElementById('kpiAvg').textContent = nEntities ? (totalSum/nEntities/1e6).toFixed(1) + ' mln UAH' : '–';
 
-  // Карта
+  // Map
   medMarkersLayer.clearLayers();
   const maxPay = Math.max(1, ...filtered.map(d=>d.total_pay_all));
   filtered.forEach(d=>{
@@ -431,13 +431,13 @@ function renderMedical(){
     .bindPopup(()=>{
       const physicalLabel = OBLAST_UA[d.oblast_slug] || d.oblast_slug || '—';
       const legalLine = (d.registration_area && d.registration_area !== physicalLabel)
-        ? `<br><span style="color:#6b6659">Юрособа зареєстрована: ${d.registration_area}</span>` : '';
-      return `<b>${d.division_name}</b><br>${d.legal_entity_name}<br>${d.care_type} / ${d.division_type}<br>${physicalLabel}${legalLine}<br>Фінансування юрособи: ${d.total_pay_all.toLocaleString('uk-UA')} грн`;
+        ? `<br><span style="color:#6b6659">Legal entity registered: ${d.registration_area}</span>` : '';
+      return `<b>${d.division_name}</b><br>${d.legal_entity_name}<br>${d.care_type} / ${d.division_type}<br>${physicalLabel}${legalLine}<br>Legal entity funding: ${d.total_pay_all.toLocaleString('en-US')} UAH`;
     })
     .addTo(medMarkersLayer);
   });
 
-  // Топ-10 областей (дедубльовано по едрпоу), групуємо за фактичною областю
+  // Top-10 regions (deduplicated by edrpou), grouped by actual region
   const seen = new Set();
   const byRegion = {};
   filtered.forEach(d=>{
@@ -458,32 +458,32 @@ function renderMedical(){
     options:{
       indexAxis:'y',
       plugins:{legend:{display:false}},
-      scales:{ x:{ ticks:{ callback:v=>(v/1e9).toFixed(1)+'млрд' } } }
+      scales:{ x:{ ticks:{ callback:v=>(v/1e9).toFixed(1)+'bln' } } }
     }
   });
 
-  // Топ-10 закладів
+  // Top-10 facilities
   const uniqueEntities = {};
   filtered.forEach(d=>{ uniqueEntities[d.legal_entity_edrpou] = d; });
   const topFacilities = Object.values(uniqueEntities).sort((a,b)=>b.total_pay_all-a.total_pay_all).slice(0,10);
   document.getElementById('topTable').innerHTML = topFacilities.map(d=>
-    `<tr><td>${d.legal_entity_name}</td><td>${(d.total_pay_all/1e6).toFixed(1)} млн грн</td></tr>`
+    `<tr><td>${d.legal_entity_name}</td><td>${(d.total_pay_all/1e6).toFixed(1)} mln UAH</td></tr>`
   ).join('');
 }
 
 // ============================================================
-// ДОРОГИ
+// ROADS
 // ============================================================
 let roadsMapObj, roadsLayerGroup, fclassChartObj;
-let oblastLayersBySlug = {}; // slug -> Leaflet-шар межі області (з data/oblasts.geojson)
-let lastRoadsRows = []; // останні завантажені (нефільтровані) дороги обраної області
+let oblastLayersBySlug = {}; // slug -> Leaflet layer of region boundaries (from data/oblasts.geojson)
+let lastRoadsRows = []; // latest loaded (unfiltered) roads of the selected region
 
-// Групи класів доріг — відповідають легенді (Магістралі/Регіональні/Територіальні/Місцеві)
+// Road class groups — correspond to the legend (Motorways/Regional/Territorial/Local)
 const FCLASS_GROUPS = {
-  'Магістралі/національні': ['motorway', 'motorway_link', 'trunk', 'trunk_link'],
-  'Регіональні': ['primary', 'primary_link'],
-  'Територіальні': ['secondary', 'secondary_link', 'tertiary', 'tertiary_link'],
-  'Місцеві/службові': ['residential', 'unclassified', 'living_street', 'service', 'track'],
+  'Motorways/National': ['motorway', 'motorway_link', 'trunk', 'trunk_link'],
+  'Regional': ['primary', 'primary_link'],
+  'Territorial': ['secondary', 'secondary_link', 'tertiary', 'tertiary_link'],
+  'Local/Service': ['residential', 'unclassified', 'living_street', 'service', 'track'],
 };
 const roadClassState = {};
 Object.keys(FCLASS_GROUPS).forEach(cat => { roadClassState[cat] = true; });
@@ -492,7 +492,7 @@ function classifyFclass(fclass){
   for(const [cat, list] of Object.entries(FCLASS_GROUPS)){
     if(list.includes(fclass)) return cat;
   }
-  return 'Місцеві/службові';
+  return 'Local/Service';
 }
 
 function applyRoadFilters(rows){
@@ -516,7 +516,7 @@ function initRoadFilters(){
 }
 initRoadFilters();
 
-// Відповідність твого слага (з OBLAST_UA) до shapeName з geoBoundaries-UKR-ADM1
+// Matching your slug (from OBLAST_UA) to shapeName from geoBoundaries-UKR-ADM1
 const SLUG_TO_SHAPE = {
   kherson: "Kherson Oblast",
   volyn: "Volyn Oblast",
@@ -564,7 +564,7 @@ function initRoadsMap(){
   loadOblastBoundaries();
 }
 
-// Межі всіх областей — тонким контуром, для контексту й підсвітки обраної
+// Boundaries of all regions — thin outline, for context and highlighting the selected one
 function defaultOblastStyle(){
   return { color:'#b9b2a3', weight:1, fillOpacity:0, dashArray:'3,3' };
 }
@@ -587,10 +587,10 @@ function loadOblastBoundaries(){
         }
       }).addTo(roadsMapObj);
 
-      highlightOblast(oblastSel.value); // підсвітити ту, що вже обрана
+      highlightOblast(oblastSel.value); // highlight the one that is already selected
     })
     .catch(()=>{
-      // межі не критичні для роботи карти доріг — просто не буде підсвітки/контуру
+      // boundaries are not critical for the road map operation — there just won't be highlight/outline
     });
 }
 
@@ -612,12 +612,12 @@ function loadOblast(slug){
       document.getElementById('roadsMap').style.opacity = 1;
       lastRoadsRows = rows;
       renderRoads(applyRoadFilters(rows));
-      highlightOblast(slug); // виділити межу обраної області й підлаштувати вигляд саме під неї
+      highlightOblast(slug); // highlight the boundary of the selected region and adjust the view to it
     })
     .catch(()=>{
       document.getElementById('roadsMap').style.opacity = 1;
       document.getElementById('roadsMap').insertAdjacentHTML('afterend',
-        `<p class="loading">Не вдалось завантажити data/roads/${slug}.json</p>`);
+        `<p class="loading">Failed to load data/roads/${slug}.json</p>`);
     });
 }
 
@@ -634,14 +634,14 @@ function renderRoads(rows){
   });
   if(bounds.length) roadsMapObj.fitBounds(bounds);
 
-  // Середня швидкість — рахуємо лише по сегментах, де maxspeed відомий,
-  // інакше null-значення зіпсують суму й дадуть NaN.
+  // Average speed — calculated only for segments where maxspeed is known,
+  // otherwise null-values will ruin the sum and return NaN.
   const speeds = rows.map(r=>r.maxspeed).filter(v=>v!=null);
   const avgSpeed = speeds.length ? speeds.reduce((a,b)=>a+b,0) / speeds.length : 0;
   const pctEstimated = rows.filter(r=>r.maxspeed_estimated).length / rows.length * 100;
 
-  document.getElementById('kpiSegments').textContent = rows.length.toLocaleString('uk-UA');
-  document.getElementById('kpiSpeed').textContent = avgSpeed.toFixed(0) + ' км/год';
+  document.getElementById('kpiSegments').textContent = rows.length.toLocaleString('en-US');
+  document.getElementById('kpiSpeed').textContent = avgSpeed.toFixed(0) + ' km/h';
   document.getElementById('kpiEstimated').textContent = pctEstimated.toFixed(0) + '%';
 
   const counts = {};
