@@ -302,13 +302,17 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
   });
 });
 
-const CARE_COLORS = {'Primary':'#1e88e5','Specialized':'#e53935','Emergency':'#43a047'};
-const FCLASS_COLORS = {
-  motorway:'#dc1414', motorway_link:'#dc1414', trunk:'#dc1414', trunk_link:'#dc1414',
-  primary:'#f08c00', primary_link:'#f08c00',
-  secondary:'#f0c800', secondary_link:'#f0c800', tertiary:'#f0c800', tertiary_link:'#f0c800',
-  residential:'#8c8c8c', unclassified:'#8c8c8c', living_street:'#8c8c8c', service:'#b4b4b4',
-  track:'#c8c8c8'
+// Palette used to assign a real color to every care_type found in the data —
+// filled in dynamically in initMedicalFilters() so nothing ever falls back to gray.
+const CARE_PALETTE = ['#1e88e5','#e53935','#43a047','#8e44ad','#f39c12','#16a085','#c0392b','#2980b9','#6d4c41','#00838f'];
+let CARE_COLORS = {};
+
+// Same idea for road classes — every fclass group gets a real color from the legend palette.
+const GROUP_COLORS = {
+  'Motorways/National':'#dc1414',
+  'Regional':'#f08c00',
+  'Territorial':'#f0c800',
+  'Local/Service':'#8c8c8c'
 };
 
 const OBLAST_UA = {
@@ -349,6 +353,13 @@ const divState = {};
 function initMedicalFilters(){
   const careTypes = [...new Set(medData.map(d=>d.care_type))].sort();
   const divTypes = [...new Set(medData.map(d=>d.division_type))].sort();
+
+  // Assign every care_type a real color from the palette (cycles if there are more
+  // types than palette entries) — nothing is left to fall back to gray.
+  careTypes.forEach((c,i)=>{ CARE_COLORS[c] = CARE_PALETTE[i % CARE_PALETTE.length]; });
+  document.querySelector('#map').closest('.panel').querySelector('.legend').innerHTML =
+    careTypes.map(c=>`<span><i class="dot" style="background:${CARE_COLORS[c]}"></i>${c}</span>`).join('') +
+    '<span>· dot size = funding amount of the legal entity</span>';
 
   const careBox = document.getElementById('careChips');
   careTypes.forEach(c=>{
@@ -424,8 +435,8 @@ function renderMedical(){
     const r = Math.max(3, Math.sqrt(d.total_pay_all/maxPay) * 16);
     L.circleMarker([d.lat, d.lng], {
       radius:r,
-      color: CARE_COLORS[d.care_type] || '#999',
-      fillColor: CARE_COLORS[d.care_type] || '#999',
+      color: CARE_COLORS[d.care_type],
+      fillColor: CARE_COLORS[d.care_type],
       fillOpacity:0.55, weight:1
     })
     .bindPopup(()=>{
@@ -628,7 +639,7 @@ function renderRoads(rows){
     const latlngs = row.path.map(p=>[p[1], p[0]]); // path: [lon,lat] -> Leaflet: [lat,lon]
     latlngs.forEach(ll=>bounds.push(ll));
     L.polyline(latlngs, {
-      color: FCLASS_COLORS[row.fclass] || '#aaa',
+      color: GROUP_COLORS[classifyFclass(row.fclass)],
       weight: 2, opacity: 0.85
     }).addTo(roadsLayerGroup);
   });
