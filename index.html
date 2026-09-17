@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>НСЗУ · Дороги — дашборд відкритих даних</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#14181f;
+    --paper:#f6f4ef;
+    --panel:#ffffff;
+    --line:#e2ddd2;
+    --amber:#c8722a;
+    --amber-soft:#f1dcc6;
+    --teal:#2c6e63;
+    --red:#a83e3e;
+    --muted:#6b6659;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk',sans-serif;
+  }
+
+  header{
+    padding:28px 32px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  header h1{
+    font-size:1.6rem;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+
+  nav.tabs{
+    display:flex;
+    gap:4px;
+  }
+  nav.tabs button{
+    font-family:'Inter',sans-serif;
+    font-size:0.92rem;
+    font-weight:600;
+    padding:9px 18px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--muted);
+    border-radius:999px;
+    cursor:pointer;
+    transition:background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  nav.tabs button.active{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+
+  main{ padding:24px 32px 48px; max-width:1400px; margin:0 auto; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .filters{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    margin-bottom:18px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+    gap:16px;
+  }
+  .filters .field label{
+    display:block;
+    font-size:0.78rem;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+  .checks{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    font-size:0.82rem;
+    padding:5px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip.on{ background:var(--amber-soft); border-color:var(--amber); color:#7a4318; }
+
+  select, input[type=number]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:0.9rem;
+    background:var(--paper);
+  }
+  .range-row{ display:flex; gap:8px; align-items:center; }
+
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .kpi{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .kpi .num{ font-family:'Space Grotesk',sans-serif; font-size:1.8rem; font-weight:700; }
+  .kpi .lbl{ color:var(--muted); font-size:0.82rem; margin-top:2px; }
+
+  .grid-main{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:900px){ .grid-main{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .panel h3{
+    margin:0 0 12px;
+    font-size:1rem;
+    font-weight:600;
+  }
+  #map, #roadsMap{
+    height:560px;
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .legend{
+    display:flex;
+    gap:14px;
+    margin-top:10px;
+    font-size:0.82rem;
+    color:var(--muted);
+    flex-wrap:wrap;
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+
+  table.detail{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table.detail th, table.detail td{
+    text-align:left; padding:8px 6px; border-bottom:1px solid var(--line);
+  }
+  table.detail th{ color:var(--muted); font-weight:500; }
+
+  .loading{ color:var(--muted); font-size:0.9rem; padding:40px; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Відкриті дані охорони здоров'я та доріг</h1>
+    <p>Джерело: НСЗУ / data.gov.ua · OpenStreetMap · межі областей geoBoundaries</p>
+  </div>
+  <nav class="tabs">
+    <button class="active" data-view="medical">Медичні заклади</button>
+    <button data-view="roads">Стан доріг</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===================== МЕДИЧНІ ЗАКЛАДИ ===================== -->
+  <section id="medical" class="view active">
+
+    <div class="filters">
+      <div class="field">
+        <label>Тип медичної допомоги</label>
+        <div class="checks" id="careChips"></div>
+      </div>
+      <div class="field">
+        <label>Тип закладу</label>
+        <div class="checks" id="divChips"></div>
+      </div>
+      <div class="field">
+        <label>Область</label>
+        <select id="regionSelect"><option value="">Усі області</option></select>
+      </div>
+      <div class="field">
+        <label>Сума фінансування, грн</label>
+        <div class="range-row">
+          <input type="number" id="payMin" placeholder="від">
+          <input type="number" id="payMax" placeholder="до">
+        </div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="num" id="kpiFacilities">–</div><div class="lbl">Точок надання послуг</div></div>
+      <div class="kpi"><div class="num" id="kpiEntities">–</div><div class="lbl">Унікальних юросіб</div></div>
+      <div class="kpi"><div class="num" id="kpiSum">–</div><div class="lbl">Сума фінансування</div></div>
+      <div class="kpi"><div class="num" id="kpiAvg">–</div><div class="lbl">Середнє на юрособу</div></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <h3>Карта закладів</h3>
+        <div id="map"></div>
+        <div class="legend">
+          <span><i class="dot" style="background:#1e88e5"></i>Первинна</span>
+          <span><i class="dot" style="background:#e53935"></i>Спеціалізована</span>
+          <span><i class="dot" style="background:#43a047"></i>Екстрена</span>
+          <span>· розмір точки = сума фінансування юрособи</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Топ-10 областей за фінансуванням</h3>
+        <canvas id="regionChart" height="260"></canvas>
+        <h3 style="margin-top:20px">Топ-10 закладів</h3>
+        <table class="detail"><thead><tr><th>Заклад</th><th>Сума</th></tr></thead><tbody id="topTable"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ДОРОГИ ===================== -->
+  <section id="roads" class="view">
+    <div class="filters">
+      <div class="field">
+        <label>Область</label>
+        <select id="oblastSelect"></select>
+      </div>
+      <div class="field">
+        <label>Клас дороги</label>
+        <div class="checks" id="fclassChips"></div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="num" id="kpiSegments">–</div><div class="lbl">Сегментів дороги</div></div>
+      <div class="kpi"><div class="num" id="kpiSpeed">–</div><div class="lbl">Середня швидкість (оцінка+реальна)</div></div>
+      <div class="kpi"><div class="num" id="kpiEstimated">–</div><div class="lbl">Частка оцінених значень</div></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="panel">
+        <h3>Дорожня мережа області</h3>
+        <div id="roadsMap"></div>
+        <div class="legend">
+          <span><i class="dot" style="background:#dc1414"></i>Магістралі/національні</span>
+          <span><i class="dot" style="background:#f08c00"></i>Регіональні</span>
+          <span><i class="dot" style="background:#f0c800"></i>Територіальні</span>
+          <span><i class="dot" style="background:#8c8c8c"></i>Місцеві/службові</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Розподіл класів доріг</h3>
+        <canvas id="fclassChart" height="360"></canvas>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// Перемикання вкладок
+// ============================================================
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'roads' && roadsMapObj){ setTimeout(()=>roadsMapObj.invalidateSize(), 50); }
+    if(btn.dataset.view === 'medical' && medMapObj){ setTimeout(()=>medMapObj.invalidateSize(), 50); }
+  });
+});
+
+const CARE_COLORS = {'Первинна':'#1e88e5','Спеціалізована':'#e53935','Екстрена':'#43a047'};
+const FCLASS_COLORS = {
+  motorway:'#dc1414', motorway_link:'#dc1414', trunk:'#dc1414', trunk_link:'#dc1414',
+  primary:'#f08c00', primary_link:'#f08c00',
+  secondary:'#f0c800', secondary_link:'#f0c800', tertiary:'#f0c800', tertiary_link:'#f0c800',
+  residential:'#8c8c8c', unclassified:'#8c8c8c', living_street:'#8c8c8c', service:'#b4b4b4',
+  track:'#c8c8c8'
+};
+
+const OBLAST_UA = {
+  crimea:"АР Крим", cherkasy:"Черкаська область", chernihiv:"Чернігівська область",
+  chernivtsi:"Чернівецька область", dnipropetrovsk:"Дніпропетровська область",
+  donetsk:"Донецька область", ivano_frankivsk:"Івано-Франківська область",
+  kharkiv:"Харківська область", kherson:"Херсонська область",
+  khmelnytskyi:"Хмельницька область", kirovohrad:"Кіровоградська область",
+  kyiv_city:"м. Київ", kyiv_oblast:"Київська область", luhansk:"Луганська область",
+  lviv:"Львівська область", mykolaiv:"Миколаївська область", odesa:"Одеська область",
+  poltava:"Полтавська область", rivne:"Рівненська область", sevastopol:"м. Севастополь",
+  sumy:"Сумська область", ternopil:"Тернопільська область", vinnytsia:"Вінницька область",
+  volyn:"Волинська область", zakarpattia:"Закарпатська область",
+  zaporizhia:"Запорізька область", zhytomyr:"Житомирська область"
+};
+
+// ============================================================
+// МЕДИЧНІ ЗАКЛАДИ
+// ============================================================
+let medData = [];
+let medMapObj, medMarkersLayer, regionChartObj;
+
+fetch('data/medical.json')
+  .then(r=>r.json())
+  .then(data=>{
+    medData = data;
+    initMedicalFilters();
+    initMedicalMap();
+    renderMedical();
+  })
+  .catch(()=>{
+    document.getElementById('map').innerHTML = '<p class="loading">Не вдалось завантажити data/medical.json — перевірте, що файл лежить поруч з index.html.</p>';
+  });
+
+const careState = {};
+const divState = {};
+
+function initMedicalFilters(){
+  const careTypes = [...new Set(medData.map(d=>d.care_type))].sort();
+  const divTypes = [...new Set(medData.map(d=>d.division_type))].sort();
+  const regions = [...new Set(medData.map(d=>d.registration_area))].sort();
+
+  const careBox = document.getElementById('careChips');
+  careTypes.forEach(c=>{
+    careState[c] = true;
+    const chip = document.createElement('div');
+    chip.className = 'chip on';
+    chip.textContent = c;
+    chip.onclick = ()=>{ careState[c]=!careState[c]; chip.classList.toggle('on'); renderMedical(); };
+    careBox.appendChild(chip);
+  });
+
+  const divBox = document.getElementById('divChips');
+  divTypes.forEach(c=>{
+    divState[c] = true;
+    const chip = document.createElement('div');
+    chip.className = 'chip on';
+    chip.textContent = c;
+    chip.onclick = ()=>{ divState[c]=!divState[c]; chip.classList.toggle('on'); renderMedical(); };
+    divBox.appendChild(chip);
+  });
+
+  const regionSel = document.getElementById('regionSelect');
+  regions.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    regionSel.appendChild(opt);
+  });
+
+  regionSel.addEventListener('change', renderMedical);
+  document.getElementById('payMin').addEventListener('input', renderMedical);
+  document.getElementById('payMax').addEventListener('input', renderMedical);
+}
+
+function initMedicalMap(){
+  medMapObj = L.map('map').setView([48.7, 31.5], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+  }).addTo(medMapObj);
+  medMarkersLayer = L.layerGroup().addTo(medMapObj);
+}
+
+function getFilteredMedical(){
+  const region = document.getElementById('regionSelect').value;
+  const payMin = parseFloat(document.getElementById('payMin').value) || 0;
+  const payMax = parseFloat(document.getElementById('payMax').value) || Infinity;
+
+  return medData.filter(d=>
+    careState[d.care_type] &&
+    divState[d.division_type] &&
+    (!region || d.registration_area === region) &&
+    d.total_pay_all >= payMin && d.total_pay_all <= payMax
+  );
+}
+
+function renderMedical(){
+  const filtered = getFilteredMedical();
+
+  // KPI (дедуплікація по ЄДРПОУ — критично, щоб не рахувати суму по кожному відділенню)
+  const byEntity = {};
+  filtered.forEach(d=>{ byEntity[d.legal_entity_edrpou] = d.total_pay_all; });
+  const totalSum = Object.values(byEntity).reduce((a,b)=>a+b,0);
+  const nEntities = Object.keys(byEntity).length;
+
+  document.getElementById('kpiFacilities').textContent = filtered.length.toLocaleString('uk-UA');
+  document.getElementById('kpiEntities').textContent = nEntities.toLocaleString('uk-UA');
+  document.getElementById('kpiSum').textContent = (totalSum/1e9).toFixed(2) + ' млрд грн';
+  document.getElementById('kpiAvg').textContent = nEntities ? (totalSum/nEntities/1e6).toFixed(1) + ' млн грн' : '–';
+
+  // Карта
+  medMarkersLayer.clearLayers();
+  const maxPay = Math.max(1, ...filtered.map(d=>d.total_pay_all));
+  filtered.forEach(d=>{
+    const r = Math.max(3, Math.sqrt(d.total_pay_all/maxPay) * 16);
+    L.circleMarker([d.lat, d.lng], {
+      radius:r,
+      color: CARE_COLORS[d.care_type] || '#999',
+      fillColor: CARE_COLORS[d.care_type] || '#999',
+      fillOpacity:0.55, weight:1
+    })
+    .bindPopup(`<b>${d.division_name}</b><br>${d.legal_entity_name}<br>${d.care_type} / ${d.division_type}<br>${d.registration_area}<br>Фінансування юрособи: ${d.total_pay_all.toLocaleString('uk-UA')} грн`)
+    .addTo(medMarkersLayer);
+  });
+
+  // Топ-10 областей (дедубльовано по едрпоу)
+  const seen = new Set();
+  const byRegion = {};
+  filtered.forEach(d=>{
+    if(seen.has(d.legal_entity_edrpou)) return;
+    seen.add(d.legal_entity_edrpou);
+    byRegion[d.registration_area] = (byRegion[d.registration_area]||0) + d.total_pay_all;
+  });
+  const topRegions = Object.entries(byRegion).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  if(regionChartObj) regionChartObj.destroy();
+  regionChartObj = new Chart(document.getElementById('regionChart'), {
+    type:'bar',
+    data:{
+      labels: topRegions.map(r=>r[0]),
+      datasets:[{ data: topRegions.map(r=>r[1]), backgroundColor:'#c8722a' }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{ x:{ ticks:{ callback:v=>(v/1e9).toFixed(1)+'млрд' } } }
+    }
+  });
+
+  // Топ-10 закладів
+  const uniqueEntities = {};
+  filtered.forEach(d=>{ uniqueEntities[d.legal_entity_edrpou] = d; });
+  const topFacilities = Object.values(uniqueEntities).sort((a,b)=>b.total_pay_all-a.total_pay_all).slice(0,10);
+  document.getElementById('topTable').innerHTML = topFacilities.map(d=>
+    `<tr><td>${d.legal_entity_name}</td><td>${(d.total_pay_all/1e6).toFixed(1)} млн грн</td></tr>`
+  ).join('');
+}
+
+// ============================================================
+// ДОРОГИ
+// ============================================================
+let roadsMapObj, roadsLayerGroup, fclassChartObj;
+let oblastLayersBySlug = {}; // slug -> Leaflet-шар межі області (з data/oblasts.geojson)
+let lastRoadsRows = []; // останні завантажені (нефільтровані) дороги обраної області
+
+// Групи класів доріг — відповідають легенді (Магістралі/Регіональні/Територіальні/Місцеві)
+const FCLASS_GROUPS = {
+  'Магістралі/національні': ['motorway', 'motorway_link', 'trunk', 'trunk_link'],
+  'Регіональні': ['primary', 'primary_link'],
+  'Територіальні': ['secondary', 'secondary_link', 'tertiary', 'tertiary_link'],
+  'Місцеві/службові': ['residential', 'unclassified', 'living_street', 'service', 'track'],
+};
+const roadClassState = {};
+Object.keys(FCLASS_GROUPS).forEach(cat => { roadClassState[cat] = true; });
+
+function classifyFclass(fclass){
+  for(const [cat, list] of Object.entries(FCLASS_GROUPS)){
+    if(list.includes(fclass)) return cat;
+  }
+  return 'Місцеві/службові';
+}
+
+function applyRoadFilters(rows){
+  return rows.filter(r => roadClassState[classifyFclass(r.fclass)]);
+}
+
+function initRoadFilters(){
+  const box = document.getElementById('fclassChips');
+  Object.keys(FCLASS_GROUPS).forEach(cat=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip on';
+    chip.textContent = cat;
+    chip.onclick = ()=>{
+      roadClassState[cat] = !roadClassState[cat];
+      chip.classList.toggle('on');
+      renderRoads(applyRoadFilters(lastRoadsRows));
+      highlightOblast(oblastSel.value);
+    };
+    box.appendChild(chip);
+  });
+}
+initRoadFilters();
+
+// Відповідність твого слага (з OBLAST_UA) до shapeName з geoBoundaries-UKR-ADM1
+const SLUG_TO_SHAPE = {
+  kherson: "Kherson Oblast",
+  volyn: "Volyn Oblast",
+  rivne: "Rivne Oblast",
+  zhytomyr: "Zhytomyr Oblast",
+  kyiv_oblast: "Kyiv Oblast",
+  chernihiv: "Chernihiv Oblast",
+  sumy: "Sumy Oblast",
+  kharkiv: "Kharkiv Oblast",
+  luhansk: "Luhansk Oblast",
+  donetsk: "Donetsk Oblast",
+  zaporizhia: "Zaporizhia Oblast",
+  lviv: "Lviv Oblast",
+  ivano_frankivsk: "Ivano-Frankivsk Oblast",
+  zakarpattia: "Zakarpattia Oblast",
+  ternopil: "Ternopil Oblast",
+  chernivtsi: "Chernivtsi Oblast",
+  odesa: "Odessa Oblast",
+  mykolaiv: "Mykolaiv Oblast",
+  crimea: "Autonomous Republic of Crimea",
+  vinnytsia: "Vinnytsia Oblast",
+  khmelnytskyi: "Khmelnytskyi Oblast",
+  cherkasy: "Cherkasy Oblast",
+  poltava: "Poltava Oblast",
+  dnipropetrovsk: "Dnipropetrovsk Oblast",
+  kirovohrad: "Kirovohrad Oblast",
+  kyiv_city: "Kyiv",
+  sevastopol: "Sevastopol",
+};
+
+const oblastSel = document.getElementById('oblastSelect');
+Object.entries(OBLAST_UA).forEach(([slug,label])=>{
+  const opt = document.createElement('option');
+  opt.value = slug; opt.textContent = label;
+  oblastSel.appendChild(opt);
+});
+oblastSel.addEventListener('change', ()=>loadOblast(oblastSel.value));
+
+function initRoadsMap(){
+  roadsMapObj = L.map('roadsMap').setView([48.7, 31.5], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+  }).addTo(roadsMapObj);
+  roadsLayerGroup = L.layerGroup().addTo(roadsMapObj);
+  loadOblastBoundaries();
+}
+
+// Межі всіх областей — тонким контуром, для контексту й підсвітки обраної
+function defaultOblastStyle(){
+  return { color:'#b9b2a3', weight:1, fillOpacity:0, dashArray:'3,3' };
+}
+function highlightedOblastStyle(){
+  return { color:'#c8722a', weight:2.5, fillColor:'#c8722a', fillOpacity:0.08, dashArray:null };
+}
+
+function loadOblastBoundaries(){
+  fetch('data/oblasts.geojson')
+    .then(r=>r.json())
+    .then(geo=>{
+      const shapeToSlug = {};
+      Object.entries(SLUG_TO_SHAPE).forEach(([slug, shapeName])=>{ shapeToSlug[shapeName] = slug; });
+
+      L.geoJSON(geo, {
+        style: defaultOblastStyle,
+        onEachFeature: (feature, layer)=>{
+          const slug = shapeToSlug[feature.properties.shapeName];
+          if(slug) oblastLayersBySlug[slug] = layer;
+        }
+      }).addTo(roadsMapObj);
+
+      highlightOblast(oblastSel.value); // підсвітити ту, що вже обрана
+    })
+    .catch(()=>{
+      // межі не критичні для роботи карти доріг — просто не буде підсвітки/контуру
+    });
+}
+
+function highlightOblast(slug){
+  Object.entries(oblastLayersBySlug).forEach(([s, layer])=>{
+    layer.setStyle(s === slug ? highlightedOblastStyle() : defaultOblastStyle());
+    if(s === slug){
+      layer.bringToFront();
+      roadsMapObj.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    }
+  });
+}
+
+function loadOblast(slug){
+  document.getElementById('roadsMap').style.opacity = 0.5;
+  fetch(`data/roads/${slug}.json`)
+    .then(r=>r.json())
+    .then(rows=>{
+      document.getElementById('roadsMap').style.opacity = 1;
+      lastRoadsRows = rows;
+      renderRoads(applyRoadFilters(rows));
+      highlightOblast(slug); // виділити межу обраної області й підлаштувати вигляд саме під неї
+    })
+    .catch(()=>{
+      document.getElementById('roadsMap').style.opacity = 1;
+      document.getElementById('roadsMap').insertAdjacentHTML('afterend',
+        `<p class="loading">Не вдалось завантажити data/roads/${slug}.json</p>`);
+    });
+}
+
+function renderRoads(rows){
+  roadsLayerGroup.clearLayers();
+  const bounds = [];
+  rows.forEach(row=>{
+    const latlngs = row.path.map(p=>[p[1], p[0]]); // path: [lon,lat] -> Leaflet: [lat,lon]
+    latlngs.forEach(ll=>bounds.push(ll));
+    L.polyline(latlngs, {
+      color: FCLASS_COLORS[row.fclass] || '#aaa',
+      weight: 2, opacity: 0.85
+    }).addTo(roadsLayerGroup);
+  });
+  if(bounds.length) roadsMapObj.fitBounds(bounds);
+
+  // Середня швидкість — рахуємо лише по сегментах, де maxspeed відомий,
+  // інакше null-значення зіпсують суму й дадуть NaN.
+  const speeds = rows.map(r=>r.maxspeed).filter(v=>v!=null);
+  const avgSpeed = speeds.length ? speeds.reduce((a,b)=>a+b,0) / speeds.length : 0;
+  const pctEstimated = rows.filter(r=>r.maxspeed_estimated).length / rows.length * 100;
+
+  document.getElementById('kpiSegments').textContent = rows.length.toLocaleString('uk-UA');
+  document.getElementById('kpiSpeed').textContent = avgSpeed.toFixed(0) + ' км/год';
+  document.getElementById('kpiEstimated').textContent = pctEstimated.toFixed(0) + '%';
+
+  const counts = {};
+  rows.forEach(r=>{ counts[r.fclass] = (counts[r.fclass]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+
+  if(fclassChartObj) fclassChartObj.destroy();
+  fclassChartObj = new Chart(document.getElementById('fclassChart'), {
+    type:'bar',
+    data:{
+      labels: sorted.map(s=>s[0]),
+      datasets:[{ data: sorted.map(s=>s[1]), backgroundColor:'#2c6e63' }]
+    },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}} }
+  });
+}
+
+initRoadsMap();
+oblastSel.value = 'kyiv_city';
+loadOblast('kyiv_city');
+</script>
+</body>
+</html>
