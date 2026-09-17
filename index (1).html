@@ -349,7 +349,6 @@ const divState = {};
 function initMedicalFilters(){
   const careTypes = [...new Set(medData.map(d=>d.care_type))].sort();
   const divTypes = [...new Set(medData.map(d=>d.division_type))].sort();
-  const regions = [...new Set(medData.map(d=>d.registration_area))].sort();
 
   const careBox = document.getElementById('careChips');
   careTypes.forEach(c=>{
@@ -372,9 +371,9 @@ function initMedicalFilters(){
   });
 
   const regionSel = document.getElementById('regionSelect');
-  regions.forEach(r=>{
+  Object.entries(OBLAST_UA).forEach(([slug,label])=>{
     const opt = document.createElement('option');
-    opt.value = r; opt.textContent = r;
+    opt.value = slug; opt.textContent = label;
     regionSel.appendChild(opt);
   });
 
@@ -399,7 +398,7 @@ function getFilteredMedical(){
   return medData.filter(d=>
     careState[d.care_type] &&
     divState[d.division_type] &&
-    (!region || d.registration_area === region) &&
+    (!region || d.oblast_slug === region) &&
     d.total_pay_all >= payMin && d.total_pay_all <= payMax
   );
 }
@@ -429,17 +428,23 @@ function renderMedical(){
       fillColor: CARE_COLORS[d.care_type] || '#999',
       fillOpacity:0.55, weight:1
     })
-    .bindPopup(`<b>${d.division_name}</b><br>${d.legal_entity_name}<br>${d.care_type} / ${d.division_type}<br>${d.registration_area}<br>Фінансування юрособи: ${d.total_pay_all.toLocaleString('uk-UA')} грн`)
+    .bindPopup(()=>{
+      const physicalLabel = OBLAST_UA[d.oblast_slug] || d.oblast_slug || '—';
+      const legalLine = (d.registration_area && d.registration_area !== physicalLabel)
+        ? `<br><span style="color:#6b6659">Юрособа зареєстрована: ${d.registration_area}</span>` : '';
+      return `<b>${d.division_name}</b><br>${d.legal_entity_name}<br>${d.care_type} / ${d.division_type}<br>${physicalLabel}${legalLine}<br>Фінансування юрособи: ${d.total_pay_all.toLocaleString('uk-UA')} грн`;
+    })
     .addTo(medMarkersLayer);
   });
 
-  // Топ-10 областей (дедубльовано по едрпоу)
+  // Топ-10 областей (дедубльовано по едрпоу), групуємо за фактичною областю
   const seen = new Set();
   const byRegion = {};
   filtered.forEach(d=>{
     if(seen.has(d.legal_entity_edrpou)) return;
     seen.add(d.legal_entity_edrpou);
-    byRegion[d.registration_area] = (byRegion[d.registration_area]||0) + d.total_pay_all;
+    const label = OBLAST_UA[d.oblast_slug] || d.oblast_slug || '—';
+    byRegion[label] = (byRegion[label]||0) + d.total_pay_all;
   });
   const topRegions = Object.entries(byRegion).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
